@@ -53,6 +53,13 @@
   <ItemGroup>
     <Compile Include="HighlightWordTag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SonarLintChecker\SonarLintSinkManager.cs" />
+    <Compile Include="SonarLintChecker\SonarLintCheckerProvider.cs" />
+    <Compile Include="SonarLintChecker\SonarLintChecker.cs" />
+    <Compile Include="SonarLintChecker\SonarLintCheckerTagger.cs" />
+    <Compile Include="SonarLintChecker\SonarLintErrorsFactory.cs" />
+    <Compile Include="SonarLintChecker\SonarLintErrorsSnapshot.cs" />
+    <Compile Include="SonarLintChecker\SonarLintError.cs" />
     <Compile Include="SpellCheckerExample\SinkManager.cs" />
     <Compile Include="SpellCheckerExample\SpellChecker.cs" />
     <Compile Include="SpellCheckerExample\SpellCheckerProvider.cs" />

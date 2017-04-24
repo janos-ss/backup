@@ -4,6 +4,7 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using EnvDTE;
 using System;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -39,6 +40,7 @@ namespace VSIXProject2
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [Guid(VSPackage1.PackageGuidString)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+    [ProvideAutoLoad(UIContextGuids80.NoSolution)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class VSPackage1 : Package
     {
@@ -46,6 +48,10 @@ namespace VSIXProject2
         /// VSPackage1 GUID string.
         /// </summary>
         public const string PackageGuidString = "f47b3c5c-83f0-432a-9ef4-017efb7dae49";
+
+        // these cannot be local variables, as they will get garbage collected
+        private static DTE dte;
+        private DocumentEvents documentEvents;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VSPackage1"/> class.
@@ -67,6 +73,20 @@ namespace VSIXProject2
         protected override void Initialize()
         {
             base.Initialize();
+
+            dte = (DTE)GetService(typeof(SDTE));
+            documentEvents = dte.Events.DocumentEvents;
+            documentEvents.DocumentSaved += DocumentSaved;
+        }
+
+        private void DocumentSaved(Document document)
+        {
+            if (document == null || document.Language != "JavaScript")
+            {
+                return;
+            }
+
+            // TODO create a dummy issue
         }
 
         #endregion
