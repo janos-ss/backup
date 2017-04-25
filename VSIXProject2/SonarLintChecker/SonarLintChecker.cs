@@ -45,7 +45,7 @@ namespace SonarLintChecker
             {
                 this.FilePath = document.FilePath;
 
-                // TODO we should listen for the file changing its name (ITextDocument.FileActionOccurred)
+                // TODO what happens if the file gets renamed?
             }
 
             // We're assuming we're created on the UI thread so capture the dispatcher so we can do all of our updates on the UI thread.
@@ -147,7 +147,6 @@ namespace SonarLintChecker
         private void DoUpdate()
         {
             // It would be good to do all of this work on a background thread but we can't:
-            //      _classifier.GetClassificationSpans() should only be called on the UI thread because some classifiers assume they are called from the UI thread.
             //      Raising the TagsChanged event from the taggers needs to happen on the UI thread (because some consumers might assume it is being raised on the UI thread).
             // 
             // Updating the snapshot for the factory and calling the sink can happen on any thread but those operations are so fast that there is no point.
@@ -180,11 +179,10 @@ namespace SonarLintChecker
                     }
 
                     int expectedErrorCount = newErrors.Errors.Count + oldLineErrors.Count;
-                    bool anyNewErrors = false;
 
                     // This does a deep comparison so we will only do the update if the a different set of errors was discovered compared to what we had previously.
                     // If there were any new errors or if we didn't see all the expected errors then there is a change and we need to update the spelling errors.
-                    if (anyNewErrors || (newErrors.Errors.Count != expectedErrorCount))
+                    if (newErrors.Errors.Count != expectedErrorCount)
                     {
                         this.UpdateSonarLintErrors(newErrors);
                     }
@@ -242,24 +240,14 @@ namespace SonarLintChecker
             }
         }
 
-        // Reject spelling errors for words that are probably code constructs embedded in a comment.
-        // Reject if:
-        //  Any upper case characters after the 1st character.
-        //  Any _ in the span.
-        //  Any . in the span.
-        //  Any digits in the span.
-        private static bool IsPossibleSpellingError(SnapshotSpan span)
+        internal void UpdateErrors(List<object> issues)
         {
-            for (int i = 0; (i < span.Length); ++i)
-            {
-                char c = (span.Start + i).GetChar();
-                if ((c == '_') || (c == '.') || char.IsDigit(c) || ((i > 0) && char.IsUpper(c)))
-                {
-                    return false;
-                }
-            }
+            var oldSnapshot = this.Factory.CurrentSnapshot;
+            var newSnapshot = new SonarLintErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
 
-            return true;
+            newSnapshot.Errors.Add(new SonarLintError(new SnapshotSpan(new SnapshotPoint(_currentSnapshot, 23), 5)));
+
+            UpdateSonarLintErrors(newSnapshot);
         }
 
         private void UpdateSonarLintErrors(SonarLintErrorsSnapshot snapshot)

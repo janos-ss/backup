@@ -31,6 +31,8 @@ namespace SonarLintChecker
         private readonly List<SonarLintSinkManager> _managers = new List<SonarLintSinkManager>();
         private readonly Dictionary<string, SonarLintChecker> _sonarLintCheckers = new Dictionary<string, SonarLintChecker>();
 
+        internal static SonarLintCheckerProvider Instance { get; private set; }
+
         [ImportingConstructor]
         internal SonarLintCheckerProvider([Import]ITableManagerProvider provider, [Import] ITextDocumentFactoryService textDocumentFactoryService)
         {
@@ -42,6 +44,8 @@ namespace SonarLintChecker
                                                    StandardTableColumnDefinitions.ErrorSource, StandardTableColumnDefinitions.BuildTool,
                                                    StandardTableColumnDefinitions.ErrorSource, StandardTableColumnDefinitions.ErrorCategory,
                                                    StandardTableColumnDefinitions.Text, StandardTableColumnDefinitions.DocumentName, StandardTableColumnDefinitions.Line, StandardTableColumnDefinitions.Column);
+
+            SonarLintCheckerProvider.Instance = this;
         }
 
         /// <summary>
@@ -79,6 +83,15 @@ namespace SonarLintChecker
             get
             {
                 return _sonarLintDataSource;
+            }
+        }
+
+        internal void UpdateErrors(string path, List<object> issues)
+        {
+            SonarLintChecker checker;
+            if (this._sonarLintCheckers.TryGetValue(path, out checker))
+            {
+                checker.UpdateErrors(issues);
             }
         }
 
