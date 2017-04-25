@@ -1,12 +1,7 @@
-﻿using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
+﻿using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows.Controls;
-using System.Windows.Threading;
 
 namespace SonarLintChecker
 {
@@ -20,13 +15,9 @@ namespace SonarLintChecker
     {
         private readonly SonarLintCheckerProvider _provider;
         private readonly ITextBuffer _buffer;
-        private readonly Dispatcher _uiThreadDispatcher;
 
         private ITextSnapshot _currentSnapshot;
         private NormalizedSnapshotSpanCollection _dirtySpans;
-
-        private bool _isUpdating = false;
-        private bool _isDisposed = false;
 
         private readonly List<SonarLintCheckerTagger> _activeTaggers = new List<SonarLintCheckerTagger>();
 
@@ -47,9 +38,6 @@ namespace SonarLintChecker
 
                 // TODO what happens if the file gets renamed?
             }
-
-            // We're assuming we're created on the UI thread so capture the dispatcher so we can do all of our updates on the UI thread.
-            _uiThreadDispatcher = Dispatcher.CurrentDispatcher;
 
             this.Factory = new SonarLintErrorsFactory(this, new SonarLintErrorsSnapshot(this.FilePath, 0));
         }
@@ -82,8 +70,6 @@ namespace SonarLintChecker
 
                 _provider.RemoveSonarLintChecker(this);
 
-                _isDisposed = true;
-
                 _buffer.Properties.RemoveProperty(typeof(SonarLintChecker));
             }
         }
@@ -101,6 +87,8 @@ namespace SonarLintChecker
                 newDirtySpans = NormalizedSnapshotSpanCollection.Union(newDirtySpans, new NormalizedSnapshotSpanCollection(e.After, change.NewSpan));
             }
 
+            _dirtySpans = newDirtySpans;
+
             // Translate all the errors to the new snapshot (and remove anything that is a dirty region since we will need to check that again).
             var oldErrors = this.Factory.CurrentSnapshot;
             var newErrors = new SonarLintErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
@@ -111,7 +99,6 @@ namespace SonarLintChecker
                 Debug.Assert(error.NextIndex == -1);
 
                 var newError = SonarLintError.CloneAndTranslateTo(error, e.After);
-
                 if (newError != null)
                 {
                     Debug.Assert(newError.Span.Length == error.Span.Length);
@@ -122,8 +109,6 @@ namespace SonarLintChecker
             }
 
             this.UpdateSonarLintErrors(newErrors);
-
-            _dirtySpans = newDirtySpans;
         }
 
         internal void UpdateErrors(List<object> issues)
