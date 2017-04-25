@@ -67,8 +67,6 @@ namespace SonarLintChecker
                 _dirtySpans = new NormalizedSnapshotSpanCollection(new SnapshotSpan(_currentSnapshot, 0, _currentSnapshot.Length));
 
                 _provider.AddSonarLintChecker(this);
-
-                this.KickUpdate();
             }
         }
 
@@ -126,118 +124,6 @@ namespace SonarLintChecker
             this.UpdateSonarLintErrors(newErrors);
 
             _dirtySpans = newDirtySpans;
-
-            // Start processing the dirty spans (which no-ops if we're already doing it).
-            if (_dirtySpans.Count != 0)
-            {
-                this.KickUpdate();
-            }
-        }
-
-        private void KickUpdate()
-        {
-            // We're assuming we will only be called from the UI thread so there should be no issues with race conditions.
-            if (!_isUpdating)
-            {
-                _isUpdating = true;
-                _uiThreadDispatcher.BeginInvoke(new Action(() => this.DoUpdate()), DispatcherPriority.Background);
-            }
-        }
-
-        private void DoUpdate()
-        {
-            // It would be good to do all of this work on a background thread but we can't:
-            //      Raising the TagsChanged event from the taggers needs to happen on the UI thread (because some consumers might assume it is being raised on the UI thread).
-            // 
-            // Updating the snapshot for the factory and calling the sink can happen on any thread but those operations are so fast that there is no point.
-            if ((!_isDisposed) && (_dirtySpans.Count > 0))
-            {
-                var line = _dirtySpans[0].Start.GetContainingLine();
-
-                if (line.Length > 0)
-                {
-                    var oldErrors = this.Factory.CurrentSnapshot;
-                    var newErrors = new SonarLintErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
-
-                    // Go through the existing errors. If they are on the line we are currently parsing then
-                    // copy them to oldLineErrors, otherwise they go to the new errors.
-                    var oldLineErrors = new List<SonarLintError>();
-                    foreach (var error in oldErrors.Errors)
-                    {
-                        Debug.Assert(error.NextIndex == -1);
-
-                        if (line.Extent.Contains(error.Span))
-                        {
-                            error.NextIndex = -1;
-                            oldLineErrors.Add(error);                           // Do not clone old error here ... we'll do that later there is no change.
-                        }
-                        else
-                        {
-                            error.NextIndex = newErrors.Errors.Count;
-                            newErrors.Errors.Add(SonarLintError.Clone(error));   // We must clone the old error here.
-                        }
-                    }
-
-                    int expectedErrorCount = newErrors.Errors.Count + oldLineErrors.Count;
-
-                    // This does a deep comparison so we will only do the update if the a different set of errors was discovered compared to what we had previously.
-                    // If there were any new errors or if we didn't see all the expected errors then there is a change and we need to update the spelling errors.
-                    if (newErrors.Errors.Count != expectedErrorCount)
-                    {
-                        this.UpdateSonarLintErrors(newErrors);
-                    }
-                    else
-                    {
-                        // There were no changes so we don't need to update our snapshot.
-                        // We have, however, dirtied the old errors by setting their NextIndex property on the assumption that we would be updating the errors.
-                        // Revert all those changes.
-                        foreach (var error in oldErrors.Errors)
-                        {
-                            error.NextIndex = -1;
-                        }
-                    }
-                }
-
-                // NormalizedSnapshotSpanCollection.Difference doesn't quite do what we need here. If I have {[5,5), [10,20)} and subtract {[5, 15)} and do a ...Difference, I
-                // end up with {[5,5), [15,20)} (the zero length span at the beginning isn't getting removed). A zero-length span at the end wouldn't be removed but, in this case,
-                // that is the desired behavior (the zero length span at the end could be a change at the beginning of the next line, which we'd want to keep).
-                var newDirtySpans = new List<Span>(_dirtySpans.Count + 1);
-                var extent = line.ExtentIncludingLineBreak;
-
-                for (int i = 0; (i < _dirtySpans.Count); ++i)
-                {
-                    Span s = _dirtySpans[i];
-                    if ((s.End < extent.Start) || (s.Start >= extent.End))          // Intentionally asymmetric
-                    {
-                        newDirtySpans.Add(s);
-                    }
-                    else
-                    {
-                        if (s.Start < extent.Start)
-                        {
-                            newDirtySpans.Add(Span.FromBounds(s.Start, extent.Start));
-                        }
-
-                        if ((s.End >= extent.End) && (extent.End < line.Snapshot.Length))
-                        {
-                            newDirtySpans.Add(Span.FromBounds(extent.End, s.End));  //This could add a zero length span (which is by design since we want to ensure we spell check the next line).
-                        }
-                    }
-                }
-
-                _dirtySpans = new NormalizedSnapshotSpanCollection(line.Snapshot, newDirtySpans);
-
-                if (_dirtySpans.Count == 0)
-                {
-                    // We've cleaned up all the dirty spans.
-                    _isUpdating = false;
-                }
-                else
-                {
-                    // Still more work to do.
-                    _uiThreadDispatcher.BeginInvoke(new Action(() => this.DoUpdate()), DispatcherPriority.Background);
-                }
-            }
         }
 
         internal void UpdateErrors(List<object> issues)
