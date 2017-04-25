@@ -1,14 +1,14 @@
 ﻿using Microsoft.VisualStudio.Shell.TableManager;
 
-namespace SonarLintChecker
+namespace SonarLintTracker
 {
     class SonarLintErrorsFactory : TableEntriesSnapshotFactoryBase
     {
-        private readonly SonarLintChecker _sonarLintChecker;
+        private readonly IssueTracker _sonarLintChecker;
 
         public SonarLintErrorsSnapshot CurrentSnapshot { get; private set; }
 
-        public SonarLintErrorsFactory(SonarLintChecker sonarLintChecker, SonarLintErrorsSnapshot snapshot)
+        public SonarLintErrorsFactory(IssueTracker sonarLintChecker, SonarLintErrorsSnapshot snapshot)
         {
             _sonarLintChecker = sonarLintChecker;
 

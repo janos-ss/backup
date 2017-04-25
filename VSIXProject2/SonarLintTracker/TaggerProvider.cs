@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.Shell.TableControl;
 using Microsoft.VisualStudio.Shell.TableManager;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
@@ -9,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 
-namespace SonarLintChecker
+namespace SonarLintTracker
 {
     /// <summary>
     /// Factory for the <see cref="ITagger{T}"/>. There will be one instance of this class/VS session.
@@ -21,7 +20,7 @@ namespace SonarLintChecker
     [ContentType("text")]
     [TextViewRole(PredefinedTextViewRoles.Document)]
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
-    internal sealed class SonarLintCheckerProvider : IViewTaggerProvider, ITableDataSource
+    internal sealed class TaggerProvider : IViewTaggerProvider, ITableDataSource
     {
         internal readonly ITableManager ErrorTableManager;
         internal readonly ITextDocumentFactoryService TextDocumentFactoryService;
@@ -29,12 +28,12 @@ namespace SonarLintChecker
         const string _sonarLintDataSource = "SonarLint";
 
         private readonly List<SonarLintSinkManager> _managers = new List<SonarLintSinkManager>();
-        private readonly Dictionary<string, SonarLintChecker> _sonarLintCheckers = new Dictionary<string, SonarLintChecker>();
+        private readonly Dictionary<string, IssueTracker> _sonarLintCheckers = new Dictionary<string, IssueTracker>();
 
-        internal static SonarLintCheckerProvider Instance { get; private set; }
+        internal static TaggerProvider Instance { get; private set; }
 
         [ImportingConstructor]
-        internal SonarLintCheckerProvider([Import]ITableManagerProvider provider, [Import] ITextDocumentFactoryService textDocumentFactoryService)
+        internal TaggerProvider([Import]ITableManagerProvider provider, [Import] ITextDocumentFactoryService textDocumentFactoryService)
         {
             this.ErrorTableManager = provider.GetTableManager(StandardTables.ErrorsTable);
             this.TextDocumentFactoryService = textDocumentFactoryService;
@@ -45,7 +44,7 @@ namespace SonarLintChecker
                                                    StandardTableColumnDefinitions.ErrorSource, StandardTableColumnDefinitions.ErrorCategory,
                                                    StandardTableColumnDefinitions.Text, StandardTableColumnDefinitions.DocumentName, StandardTableColumnDefinitions.Line, StandardTableColumnDefinitions.Column);
 
-            SonarLintCheckerProvider.Instance = this;
+            TaggerProvider.Instance = this;
         }
 
         /// <summary>
@@ -59,11 +58,11 @@ namespace SonarLintChecker
             // only create one instance of the spell checker.
             if ((buffer == textView.TextBuffer) && (typeof(T) == typeof(IErrorTag)))
             {
-                var checker = buffer.Properties.GetOrCreateSingletonProperty(typeof(SonarLintChecker), () => new SonarLintChecker(this, textView, buffer));
+                var checker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
 
                 // This is a thin wrapper around the SpellChecker that can be disposed of without shutting down the SpellChecker
                 // (unless it was the last tagger on the spell checker).
-                tagger = new SonarLintCheckerTagger(checker) as ITagger<T>;
+                tagger = new Tagger(checker) as ITagger<T>;
             }
 
             return tagger;
@@ -88,7 +87,7 @@ namespace SonarLintChecker
 
         internal void UpdateErrors(string path, List<object> issues)
         {
-            SonarLintChecker checker;
+            IssueTracker checker;
             if (this._sonarLintCheckers.TryGetValue(path, out checker))
             {
                 checker.UpdateErrors(issues);
@@ -137,7 +136,7 @@ namespace SonarLintChecker
             }
         }
 
-        public void AddSonarLintChecker(SonarLintChecker checker)
+        public void AddSonarLintChecker(IssueTracker checker)
         {
             // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
             lock (_managers)
@@ -152,7 +151,7 @@ namespace SonarLintChecker
             }
         }
 
-        public void RemoveSonarLintChecker(SonarLintChecker checker)
+        public void RemoveSonarLintChecker(IssueTracker checker)
         {
             // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
             lock (_managers)

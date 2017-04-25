@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
-using SonarLintChecker;
+using SonarLintTracker;
 
 namespace VSIXProject2
 {
@@ -87,12 +87,12 @@ namespace VSIXProject2
                 return;
             }
 
-            if (SonarLintCheckerProvider.Instance == null)
+            if (TaggerProvider.Instance == null)
             {
                 return;
             }
 
-            SonarLintCheckerProvider.Instance.UpdateErrors(document.FullName, null);
+            TaggerProvider.Instance.UpdateErrors(document.FullName, null);
         }
 
         #endregion

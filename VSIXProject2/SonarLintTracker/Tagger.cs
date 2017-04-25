@@ -4,14 +4,14 @@ using Microsoft.VisualStudio.Text.Tagging;
 using System;
 using System.Collections.Generic;
 
-namespace SonarLintChecker
+namespace SonarLintTracker
 {
-    class SonarLintCheckerTagger : ITagger<IErrorTag>, IDisposable
+    class Tagger : ITagger<IErrorTag>, IDisposable
     {
-        private readonly SonarLintChecker _checker;
+        private readonly IssueTracker _checker;
         private SonarLintErrorsSnapshot _snapshot;
 
-        internal SonarLintCheckerTagger(SonarLintChecker checker)
+        internal Tagger(IssueTracker checker)
         {
             _checker = checker;
             _snapshot = checker.LastErrors;

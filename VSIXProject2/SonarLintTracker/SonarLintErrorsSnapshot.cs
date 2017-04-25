@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace SonarLintChecker
+namespace SonarLintTracker
 {
     class SonarLintErrorsSnapshot : WpfTableEntriesSnapshotBase
     {
@@ -13,7 +13,7 @@ namespace SonarLintChecker
         private readonly int _versionNumber;
 
         // We're not using an immutable list here but we cannot modify the list in any way once we've published the snapshot.
-        public readonly List<SonarLintError> Errors = new List<SonarLintError>();
+        public readonly List<IssueSpan> Errors = new List<IssueSpan>();
 
         public SonarLintErrorsSnapshot NextSnapshot;
 

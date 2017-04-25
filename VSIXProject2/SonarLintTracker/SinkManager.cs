@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Shell.TableManager;
 using System;
 
-namespace SonarLintChecker
+namespace SonarLintTracker
 {
     /// <summary>
     /// Every consumer of data from an <see cref="ITableDataSource"/> provides an <see cref="ITableDataSink"/> to record the changes. We give the consumer
@@ -9,10 +9,10 @@ namespace SonarLintChecker
     /// </summary>
     class SonarLintSinkManager : IDisposable
     {
-        private readonly SonarLintCheckerProvider _errorsProvider;
+        private readonly TaggerProvider _errorsProvider;
         private readonly ITableDataSink _sink;
 
-        internal SonarLintSinkManager(SonarLintCheckerProvider errorsProvider, ITableDataSink sink)
+        internal SonarLintSinkManager(TaggerProvider errorsProvider, ITableDataSink sink)
         {
             _errorsProvider = errorsProvider;
             _sink = sink;
@@ -25,12 +25,12 @@ namespace SonarLintChecker
             _errorsProvider.RemoveSinkManager(this);
         }
 
-        internal void AddSonarLintChecker(SonarLintChecker sonarLintChecker)
+        internal void AddSonarLintChecker(IssueTracker sonarLintChecker)
         {
             _sink.AddFactory(sonarLintChecker.Factory);
         }
 
-        internal void RemoveSonarLintChecker(SonarLintChecker sonarLintChecker)
+        internal void RemoveSonarLintChecker(IssueTracker sonarLintChecker)
         {
             _sink.RemoveFactory(sonarLintChecker.Factory);
         }
