@@ -125,13 +125,13 @@ namespace SonarLintTracker
                     content = string.Format(CultureInfo.InvariantCulture, "http://www.sonarlint.org/visualstudio/rules/index.html#version=5.9.0.992&ruleId={0}", this.IssueMarkers[index].Span.GetText());
                     return true;
                 }
-                else if (columnName == StandardTableKeyNames.ProjectGuid)
-                {
-                    // TODO
-                }
                 else if (columnName == StandardTableKeyNames.ProjectName)
                 {
                     // TODO
+                }
+                else if (columnName == StandardTableKeyNames.ProjectGuid)
+                {
+                    // TODO : not sure if this is needed. Maybe ok to omit as long as the Project column is visible?
                 }
             }
 

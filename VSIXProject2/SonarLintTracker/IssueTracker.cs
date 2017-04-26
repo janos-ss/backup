@@ -9,7 +9,7 @@ namespace SonarLintTracker
     /// Tracks Sonar errors for a specific buffer.
     ///</summary>
     /// <remarks><para>The lifespan of this object is tied to the lifespan of the taggers on the view. On creation of the first tagger,
-    /// the SonarLintChecker starts tracking errors. On the disposal of the last tagger, it shuts down.</para>
+    /// it starts tracking errors. On the disposal of the last tagger, it shuts down.</para>
     /// </remarks>
     public class IssueTracker
     {
@@ -53,7 +53,7 @@ namespace SonarLintTracker
 
                 _dirtySpans = new NormalizedSnapshotSpanCollection(new SnapshotSpan(_currentSnapshot, 0, _currentSnapshot.Length));
 
-                _provider.AddSonarLintChecker(this);
+                _provider.AddIssueTracker(this);
             }
         }
 
@@ -65,7 +65,7 @@ namespace SonarLintTracker
             {
                 _buffer.ChangedLowPriority -= this.OnBufferChange;
 
-                _provider.RemoveSonarLintChecker(this);
+                _provider.RemoveIssueTracker(this);
 
                 _buffer.Properties.RemoveProperty(typeof(IssueTracker));
             }

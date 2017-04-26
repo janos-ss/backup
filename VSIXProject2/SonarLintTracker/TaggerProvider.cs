@@ -19,21 +19,18 @@ namespace SonarLintTracker
     [TagType(typeof(IErrorTag))]
     [ContentType("text")]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     internal sealed class TaggerProvider : IViewTaggerProvider, ITableDataSource
     {
         internal readonly ITableManager ErrorTableManager;
         internal readonly ITextDocumentFactoryService TextDocumentFactoryService;
 
-        const string _sonarLintDataSource = "SonarLint";
-
-        private readonly List<SinkManager> _managers = new List<SinkManager>();
-        private readonly Dictionary<string, IssueTracker> _sonarLintCheckers = new Dictionary<string, IssueTracker>();
+        private readonly List<SinkManager> managers = new List<SinkManager>();
+        private readonly Dictionary<string, IssueTracker> trackers = new Dictionary<string, IssueTracker>();
 
         internal static TaggerProvider Instance { get; private set; }
 
         [ImportingConstructor]
-        internal TaggerProvider([Import]ITableManagerProvider provider, [Import] ITextDocumentFactoryService textDocumentFactoryService)
+        internal TaggerProvider([Import] ITableManagerProvider provider, [Import] ITextDocumentFactoryService textDocumentFactoryService)
         {
             this.ErrorTableManager = provider.GetTableManager(StandardTables.ErrorsTable);
             this.TextDocumentFactoryService = textDocumentFactoryService;
@@ -42,30 +39,30 @@ namespace SonarLintTracker
                                                    StandardTableColumnDefinitions.ErrorSeverity, StandardTableColumnDefinitions.ErrorCode,
                                                    StandardTableColumnDefinitions.ErrorSource, StandardTableColumnDefinitions.BuildTool,
                                                    StandardTableColumnDefinitions.ErrorSource, StandardTableColumnDefinitions.ErrorCategory,
-                                                   StandardTableColumnDefinitions.Text, StandardTableColumnDefinitions.DocumentName, StandardTableColumnDefinitions.Line, StandardTableColumnDefinitions.Column);
+                                                   StandardTableColumnDefinitions.Text, StandardTableColumnDefinitions.DocumentName,
+                                                   StandardTableColumnDefinitions.Line, StandardTableColumnDefinitions.Column,
+                                                   StandardTableColumnDefinitions.ProjectName);
 
             TaggerProvider.Instance = this;
         }
 
         /// <summary>
-        /// Create a tagger that does spell checking on the view/buffer combination.
+        /// Create a tagger that will track Sonar issues on the view/buffer combination.
         /// </summary>
         public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
         {
-            ITagger<T> tagger = null;
-
-            // Only attempt to spell check on the view's edit buffer (and multiple views could have that buffer open simultaneously so
-            // only create one instance of the spell checker.
+            // Only attempt to track the view's edit buffer.
+            // Multiple views could have that buffer open simultaneously, so only create one instance of the tracker.
             if ((buffer == textView.TextBuffer) && (typeof(T) == typeof(IErrorTag)))
             {
-                var checker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
+                var tracker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
 
-                // This is a thin wrapper around the SpellChecker that can be disposed of without shutting down the SpellChecker
-                // (unless it was the last tagger on the spell checker).
-                tagger = new Tagger(checker) as ITagger<T>;
+                // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
+                // (unless it was the last tagger on the IssueTracker).
+                return new Tagger(tracker) as ITagger<T>;
             }
 
-            return tagger;
+            return null;
         }
 
         #region ITableDataSource members
@@ -73,7 +70,7 @@ namespace SonarLintTracker
         {
             get
             {
-                return "SonarLint Checker";
+                return "SonarLint";
             }
         }
 
@@ -81,16 +78,16 @@ namespace SonarLintTracker
         {
             get
             {
-                return _sonarLintDataSource;
+                return "SonarLint";
             }
         }
 
         internal void UpdateErrors(string path, List<object> issues)
         {
-            IssueTracker checker;
-            if (this._sonarLintCheckers.TryGetValue(path, out checker))
+            IssueTracker tracker;
+            if (this.trackers.TryGetValue(path, out tracker))
             {
-                checker.UpdateErrors(issues);
+                tracker.UpdateErrors(issues);
             }
         }
 
@@ -114,14 +111,14 @@ namespace SonarLintTracker
         {
             // This call can, in theory, happen from any thread so be appropriately thread safe.
             // In practice, it will probably be called only once from the UI thread (by the error list tool window).
-            lock (_managers)
+            lock (managers)
             {
-                _managers.Add(manager);
+                managers.Add(manager);
 
-                // Add the pre-existing spell checkers to the manager.
-                foreach (var checker in _sonarLintCheckers.Values)
+                // Add the pre-existing issue trackers to the manager.
+                foreach (var tracker in trackers.Values)
                 {
-                    manager.AddIssueTracker(checker);
+                    manager.AddIssueTracker(tracker);
                 }
             }
         }
@@ -130,46 +127,45 @@ namespace SonarLintTracker
         {
             // This call can, in theory, happen from any thread so be appropriately thread safe.
             // In practice, it will probably be called only once from the UI thread (by the error list tool window).
-            lock (_managers)
+            lock (managers)
             {
-                _managers.Remove(manager);
+                managers.Remove(manager);
             }
         }
 
-        public void AddSonarLintChecker(IssueTracker checker)
+        public void AddIssueTracker(IssueTracker tracker)
         {
             // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
-            lock (_managers)
+            lock (managers)
             {
-                _sonarLintCheckers.Add(checker.FilePath, checker);
+                trackers.Add(tracker.FilePath, tracker);
 
-                // Tell the preexisting managers about the new spell checker
-                foreach (var manager in _managers)
+                foreach (var manager in managers)
                 {
-                    manager.AddIssueTracker(checker);
+                    manager.AddIssueTracker(tracker);
                 }
             }
         }
 
-        public void RemoveSonarLintChecker(IssueTracker checker)
+        public void RemoveIssueTracker(IssueTracker tracker)
         {
             // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
-            lock (_managers)
+            lock (managers)
             {
-                _sonarLintCheckers.Remove(checker.FilePath);
+                trackers.Remove(tracker.FilePath);
 
-                foreach (var manager in _managers)
+                foreach (var manager in managers)
                 {
-                    manager.RemoveIssueTracker(checker);
+                    manager.RemoveIssueTracker(tracker);
                 }
             }
         }
 
         public void UpdateAllSinks()
         {
-            lock (_managers)
+            lock (managers)
             {
-                foreach (var manager in _managers)
+                foreach (var manager in managers)
                 {
                     manager.UpdateSink();
                 }

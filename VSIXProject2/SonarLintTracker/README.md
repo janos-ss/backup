@@ -17,11 +17,11 @@ The main classes and their purposes:
 - `SinkManager`: maybe: link `ITableDataSink` with `TaggerProvider`,
   to synchronize the content of the Error List with the tags in the editor.
 
-- `ErrorsSnapshot`: provide the content in the error list, based on the current snapshot of issue list.
+- `ErrorsSnapshot`: provide the content details in the error list, based on the current snapshot of issue list.
 
 - `SnapshotFactory`: track current issues snapshot, and manage switching to next snapshot.
 
 - `Tagger`: create tags from issues in the current snapshot,
   refreshing only part of the buffer, between first issue and last.
 
-- `TaggerProvider`:
+- `TaggerProvider`: data source for the error list. Also provide tagger for issues.
