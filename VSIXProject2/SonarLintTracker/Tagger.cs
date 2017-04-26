@@ -8,20 +8,20 @@ namespace SonarLintTracker
 {
     class Tagger : ITagger<IErrorTag>, IDisposable
     {
-        private readonly IssueTracker _checker;
+        private readonly IssueTracker _tracker;
         private ErrorsSnapshot _snapshot;
 
-        internal Tagger(IssueTracker checker)
+        internal Tagger(IssueTracker tracker)
         {
-            _checker = checker;
-            _snapshot = checker.LastErrors;
+            this._tracker = tracker;
+            this._snapshot = tracker.LastErrors;
 
-            checker.AddTagger(this);
+            tracker.AddTagger(this);
         }
 
         internal void UpdateErrors(ITextSnapshot currentSnapshot, ErrorsSnapshot snapshot)
         {
-            var oldSpellingErrors = _snapshot;
+            var oldSnapshot = _snapshot;
             _snapshot = snapshot;
 
             var h = this.TagsChanged;
@@ -31,10 +31,10 @@ namespace SonarLintTracker
                 int start = int.MaxValue;
                 int end = int.MinValue;
 
-                if ((oldSpellingErrors != null) && (oldSpellingErrors.IssueMarkers.Count > 0))
+                if ((oldSnapshot != null) && (oldSnapshot.IssueMarkers.Count > 0))
                 {
-                    start = oldSpellingErrors.IssueMarkers[0].Span.Start.TranslateTo(currentSnapshot, PointTrackingMode.Negative);
-                    end = oldSpellingErrors.IssueMarkers[oldSpellingErrors.IssueMarkers.Count - 1].Span.End.TranslateTo(currentSnapshot, PointTrackingMode.Positive);
+                    start = oldSnapshot.IssueMarkers[0].Span.Start.TranslateTo(currentSnapshot, PointTrackingMode.Negative);
+                    end = oldSnapshot.IssueMarkers[oldSnapshot.IssueMarkers.Count - 1].Span.End.TranslateTo(currentSnapshot, PointTrackingMode.Positive);
                 }
 
                 if (snapshot.Count > 0)
@@ -53,7 +53,7 @@ namespace SonarLintTracker
         public void Dispose()
         {
             // Called when the tagger is no longer needed (generally when the ITextView is closed).
-            _checker.RemoveTagger(this);
+            _tracker.RemoveTagger(this);
         }
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -62,11 +62,11 @@ namespace SonarLintTracker
         {
             if (_snapshot != null)
             {
-                foreach (var error in _snapshot.IssueMarkers)
+                foreach (var issue in _snapshot.IssueMarkers)
                 {
-                    if (spans.IntersectsWith(error.Span))
+                    if (spans.IntersectsWith(issue.Span))
                     {
-                        yield return new TagSpan<IErrorTag>(error.Span, new ErrorTag(PredefinedErrorTypeNames.Warning));
+                        yield return new TagSpan<IErrorTag>(issue.Span, new ErrorTag(PredefinedErrorTypeNames.Warning));
                     }
                 }
             }
