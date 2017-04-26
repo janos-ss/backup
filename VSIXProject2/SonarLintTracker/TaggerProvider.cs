@@ -57,7 +57,7 @@ namespace SonarLintTracker
             {
                 // TODO this singleton property looks like a dirty hack.
                 // The IssueTracker removes the property when the last tagger is removed,
-                // but that code is far away from here, making the code "magic", and error-prone to modifications
+                // but that code is far away from here, making the code "magic", and prone to errors if modified.
                 var tracker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
 
                 // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
@@ -85,15 +85,6 @@ namespace SonarLintTracker
             }
         }
 
-        internal void UpdateErrors(string path, List<object> issues)
-        {
-            IssueTracker tracker;
-            if (this.trackers.TryGetValue(path, out tracker))
-            {
-                tracker.UpdateErrors(issues);
-            }
-        }
-
         public string SourceTypeIdentifier
         {
             get
@@ -109,6 +100,15 @@ namespace SonarLintTracker
             return new SinkManager(this, sink);
         }
         #endregion
+
+        internal void UpdateErrors(string path, List<object> issues)
+        {
+            IssueTracker tracker;
+            if (this.trackers.TryGetValue(path, out tracker))
+            {
+                tracker.UpdateErrors(issues);
+            }
+        }
 
         public void AddSinkManager(SinkManager manager)
         {
