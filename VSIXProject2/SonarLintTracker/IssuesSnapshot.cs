@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace SonarLintTracker
 {
-    class ErrorsSnapshot : WpfTableEntriesSnapshotBase
+    class IssuesSnapshot : WpfTableEntriesSnapshotBase
     {
         private readonly string filePath;
         private readonly int versionNumber;
@@ -15,9 +15,9 @@ namespace SonarLintTracker
         // We're not using an immutable list here but we cannot modify the list in any way once we've published the snapshot.
         public readonly List<IssueMarker> IssueMarkers = new List<IssueMarker>();
 
-        public ErrorsSnapshot NextSnapshot;
+        public IssuesSnapshot NextSnapshot;
 
-        internal ErrorsSnapshot(string filePath, int versionNumber)
+        internal IssuesSnapshot(string filePath, int versionNumber)
         {
             this.filePath = filePath;
             this.versionNumber = versionNumber;
@@ -41,10 +41,9 @@ namespace SonarLintTracker
 
         public override int IndexOf(int currentIndex, ITableEntriesSnapshot newerSnapshot)
         {
-            // This and TranslateTo() are used to map errors from one snapshot to a different one (that way the error list can do things like maintain the selection on an error
+            // This and TranslateTo() are used to map errors from one snapshot to a different one
+            // (that way the error list can do things like maintain the selection on an error
             // even when the snapshot containing the error is replaced by a new one).
-            //
-            // You only need to implement Identity() or TranslateTo() and, of the two, TranslateTo() is more efficient for the error list to use.
 
             // Map currentIndex to the corresponding index in newerSnapshot (and keep doing it until either
             // we run out of snapshots, we reach newerSnapshot, or the index can no longer be mapped forward).

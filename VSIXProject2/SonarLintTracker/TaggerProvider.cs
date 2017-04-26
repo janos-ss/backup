@@ -101,12 +101,12 @@ namespace SonarLintTracker
         }
         #endregion
 
-        internal void UpdateErrors(string path, List<object> issues)
+        internal void UpdateIssues(string path, List<object> issues)
         {
             IssueTracker tracker;
             if (this.trackers.TryGetValue(path, out tracker))
             {
-                tracker.UpdateErrors(issues);
+                tracker.UpdateIssues(issues);
             }
         }
 

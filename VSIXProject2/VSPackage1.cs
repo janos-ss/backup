@@ -97,7 +97,7 @@ namespace VSIXProject2
                 return;
             }
 
-            TaggerProvider.Instance.UpdateErrors(document.FullName, null);
+            TaggerProvider.Instance.UpdateIssues(document.FullName, null);
         }
 
         #endregion

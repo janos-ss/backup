@@ -9,12 +9,12 @@ namespace SonarLintTracker
     class Tagger : ITagger<IErrorTag>, IDisposable
     {
         private readonly IssueTracker tracker;
-        private ErrorsSnapshot snapshot;
+        private IssuesSnapshot snapshot;
 
         internal Tagger(IssueTracker tracker)
         {
             this.tracker = tracker;
-            this.snapshot = tracker.LastErrors;
+            this.snapshot = tracker.LastSnapshot;
 
             tracker.AddTagger(this);
         }
@@ -24,7 +24,7 @@ namespace SonarLintTracker
             tracker.RemoveTagger(this);
         }
 
-        internal void UpdateErrors(ITextSnapshot currentSnapshot, ErrorsSnapshot snapshot)
+        internal void UpdateMarkers(ITextSnapshot currentSnapshot, IssuesSnapshot snapshot)
         {
             var oldSnapshot = this.snapshot;
             this.snapshot = snapshot;

@@ -4,14 +4,14 @@ namespace SonarLintTracker
 {
     class SnapshotFactory : TableEntriesSnapshotFactoryBase
     {
-        public ErrorsSnapshot CurrentSnapshot { get; private set; }
+        public IssuesSnapshot CurrentSnapshot { get; private set; }
 
-        public SnapshotFactory(ErrorsSnapshot snapshot)
+        public SnapshotFactory(IssuesSnapshot snapshot)
         {
             this.CurrentSnapshot = snapshot;
         }
 
-        internal void UpdateErrors(ErrorsSnapshot snapshot)
+        internal void UpdateMarkers(IssuesSnapshot snapshot)
         {
             this.CurrentSnapshot.NextSnapshot = snapshot;
             this.CurrentSnapshot = snapshot;

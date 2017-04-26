@@ -40,7 +40,7 @@ namespace SonarLintTracker
                 // TODO what happens if could not get file?
             }
 
-            this.Factory = new SnapshotFactory(new ErrorsSnapshot(this.FilePath, 0));
+            this.Factory = new SnapshotFactory(new IssuesSnapshot(this.FilePath, 0));
         }
 
         internal void AddTagger(Tagger tagger)
@@ -76,9 +76,9 @@ namespace SonarLintTracker
         {
             UpdateDirtySpans(e);
 
-            var newErrors = TranslateErrorSpans();
+            var newMarkers = TranslateMarkerSpans();
 
-            SnapToNewSnapshot(newErrors);
+            SnapToNewSnapshot(newMarkers);
         }
 
         private void UpdateDirtySpans(TextContentChangedEventArgs e)
@@ -98,41 +98,41 @@ namespace SonarLintTracker
         }
 
         // Translate spans to the updated snapshot of the same ITextBuffer
-        private ErrorsSnapshot TranslateErrorSpans()
+        private IssuesSnapshot TranslateMarkerSpans()
         {
-            var oldErrors = this.Factory.CurrentSnapshot;
-            var newErrors = new ErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
+            var oldMarkers = this.Factory.CurrentSnapshot;
+            var newMarkers = new IssuesSnapshot(this.FilePath, oldMarkers.VersionNumber + 1);
 
             // Copy all of the old errors to the new errors unless the error was affected by the text change
-            foreach (var error in oldErrors.IssueMarkers)
+            foreach (var marker in oldMarkers.IssueMarkers)
             {
-                var newError = IssueMarker.CloneAndTranslateTo(error, currentSnapshot);
-                if (newError != null)
+                var newMarker = IssueMarker.CloneAndTranslateTo(marker, currentSnapshot);
+                if (newMarker != null)
                 {
-                    Debug.Assert(newError.Span.Length == error.Span.Length);
+                    Debug.Assert(newMarker.Span.Length == marker.Span.Length);
 
-                    error.NextIndex = newErrors.IssueMarkers.Count;
-                    newErrors.IssueMarkers.Add(newError);
+                    marker.NextIndex = newMarkers.IssueMarkers.Count;
+                    newMarkers.IssueMarkers.Add(newMarker);
                 }
             }
 
-            return newErrors;
+            return newMarkers;
         }
 
-        internal void UpdateErrors(List<object> issues)
+        internal void UpdateIssues(List<object> issues)
         {
             var oldSnapshot = this.Factory.CurrentSnapshot;
-            var newSnapshot = new ErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
+            var newSnapshot = new IssuesSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
 
             newSnapshot.IssueMarkers.Add(new IssueMarker(new SnapshotSpan(new SnapshotPoint(currentSnapshot, 23), 5)));
 
             SnapToNewSnapshot(newSnapshot);
         }
 
-        private void SnapToNewSnapshot(ErrorsSnapshot snapshot)
+        private void SnapToNewSnapshot(IssuesSnapshot snapshot)
         {
             // Tell our factory to snap to a new snapshot.
-            this.Factory.UpdateErrors(snapshot);
+            this.Factory.UpdateMarkers(snapshot);
 
             // Tell the provider to mark all the sinks dirty (so, as a side-effect, they will start an update pass that will get the new snapshot
             // from the factory).
@@ -140,12 +140,12 @@ namespace SonarLintTracker
 
             foreach (var tagger in taggers)
             {
-                tagger.UpdateErrors(currentSnapshot, snapshot);
+                tagger.UpdateMarkers(currentSnapshot, snapshot);
             }
 
-            this.LastErrors = snapshot;
+            this.LastSnapshot = snapshot;
         }
 
-        internal ErrorsSnapshot LastErrors { get; private set; }
+        internal IssuesSnapshot LastSnapshot { get; private set; }
     }
 }
