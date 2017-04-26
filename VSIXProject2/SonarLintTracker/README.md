@@ -4,7 +4,29 @@
 Important terms in Visual Studio development:
 
 - Tags: text markers in the editor, such as underlinings of errors
-- `ITableDataSource`: data provider for the Error List
+- Error List: is the general purpose view for all kinds of errors
+
+In a nutshell:
+
+- `TaggerProvider` gets created when first activated, for example by opening a text document.
+
+- `TaggerProvider` provides not only tags but also errors for Error List.
+  As a consequence, Error List automatically subscribes to it.
+
+- `SinkManager` is used to keep track of subscribers of `TaggerProvider`.
+  A `SinkManager` notifies subscribers of changes in errors.
+
+- `SinkManager` gets updates through factories.
+
+- The errors change in two ways:
+  1. As a result of SonarLint analysis
+  2. As a result of editor changes, moving the locations of existing errors
+
+- `TaggerProvider` creates taggers for each buffer when requested.
+  It creates one `IssueTracker` per file, to track location changes.
+
+- `Tagger` and `SinkManager` react on issue changes triggered by SonarLint analysis
+  or editor changes.
 
 The main classes and their purposes:
 
