@@ -25,14 +25,14 @@ namespace SonarLintTracker
             taggerProvider.RemoveSinkManager(this);
         }
 
-        internal void AddIssueTracker(IssueTracker issueTracker)
+        internal void AddFactory(SnapshotFactory factory)
         {
-            sink.AddFactory(issueTracker.Factory);
+            sink.AddFactory(factory);
         }
 
-        internal void RemoveIssueTracker(IssueTracker issueTracker)
+        internal void RemoveFactory(SnapshotFactory factory)
         {
-            sink.RemoveFactory(issueTracker.Factory);
+            sink.RemoveFactory(factory);
         }
 
         internal void UpdateSink()

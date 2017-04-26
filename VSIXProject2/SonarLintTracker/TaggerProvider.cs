@@ -118,10 +118,9 @@ namespace SonarLintTracker
             {
                 managers.Add(manager);
 
-                // Add the pre-existing issue trackers to the manager.
                 foreach (var tracker in trackers.Values)
                 {
-                    manager.AddIssueTracker(tracker);
+                    manager.AddFactory(tracker.Factory);
                 }
             }
         }
@@ -145,21 +144,21 @@ namespace SonarLintTracker
 
                 foreach (var manager in managers)
                 {
-                    manager.AddIssueTracker(tracker);
+                    manager.AddFactory(tracker.Factory);
                 }
             }
         }
 
         public void RemoveIssueTracker(IssueTracker tracker)
         {
-            // This call will always happen on the UI thread (it is a side-effect or removing the last tagger).
+            // This call will always happen on the UI thread (it is a side-effect of removing the last tagger).
             lock (managers)
             {
                 trackers.Remove(tracker.FilePath);
 
                 foreach (var manager in managers)
                 {
-                    manager.RemoveIssueTracker(tracker);
+                    manager.RemoveFactory(tracker.Factory);
                 }
             }
         }
