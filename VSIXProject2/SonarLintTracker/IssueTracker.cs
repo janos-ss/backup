@@ -13,22 +13,22 @@ namespace SonarLintTracker
     /// </remarks>
     public class IssueTracker
     {
-        private readonly TaggerProvider _provider;
-        private readonly ITextBuffer _buffer;
+        private readonly TaggerProvider provider;
+        private readonly ITextBuffer textBuffer;
 
-        private ITextSnapshot _currentSnapshot;
-        private NormalizedSnapshotSpanCollection _dirtySpans;
+        private ITextSnapshot currentSnapshot;
+        private NormalizedSnapshotSpanCollection dirtySpans;
 
-        private readonly List<Tagger> _activeTaggers = new List<Tagger>();
+        private readonly List<Tagger> taggers = new List<Tagger>();
 
         internal readonly string FilePath;
         internal readonly SnapshotFactory Factory;
 
         internal IssueTracker(TaggerProvider provider, ITextView textView, ITextBuffer buffer)
         {
-            _provider = provider;
-            _buffer = buffer;
-            _currentSnapshot = buffer.CurrentSnapshot;
+            this.provider = provider;
+            this.textBuffer = buffer;
+            this.currentSnapshot = buffer.CurrentSnapshot;
 
             ITextDocument document;
             if (provider.TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out document))
@@ -45,29 +45,30 @@ namespace SonarLintTracker
 
         internal void AddTagger(Tagger tagger)
         {
-            _activeTaggers.Add(tagger);
+            taggers.Add(tagger);
 
-            if (_activeTaggers.Count == 1)
+            if (taggers.Count == 1)
             {
-                _buffer.ChangedLowPriority += this.OnBufferChange;
+                textBuffer.ChangedLowPriority += this.OnBufferChange;
 
-                _dirtySpans = new NormalizedSnapshotSpanCollection(new SnapshotSpan(_currentSnapshot, 0, _currentSnapshot.Length));
+                provider.AddIssueTracker(this);
 
-                _provider.AddIssueTracker(this);
+                dirtySpans = new NormalizedSnapshotSpanCollection(new SnapshotSpan(currentSnapshot, 0, currentSnapshot.Length));
             }
         }
 
         internal void RemoveTagger(Tagger tagger)
         {
-            _activeTaggers.Remove(tagger);
+            taggers.Remove(tagger);
 
-            if (_activeTaggers.Count == 0)
+            if (taggers.Count == 0)
             {
-                _buffer.ChangedLowPriority -= this.OnBufferChange;
+                textBuffer.ChangedLowPriority -= this.OnBufferChange;
 
-                _provider.RemoveIssueTracker(this);
+                provider.RemoveIssueTracker(this);
 
-                _buffer.Properties.RemoveProperty(typeof(IssueTracker));
+                // TODO dirty hack? the property was added by TaggerProvider.CreateTagger. There should be a better way.
+                textBuffer.Properties.RemoveProperty(typeof(IssueTracker));
             }
         }
 
@@ -82,10 +83,10 @@ namespace SonarLintTracker
 
         private void UpdateDirtySpans(TextContentChangedEventArgs e)
         {
-            _currentSnapshot = e.After;
+            currentSnapshot = e.After;
 
             // Translate all of the old dirty spans to the new snapshot.
-            NormalizedSnapshotSpanCollection newDirtySpans = _dirtySpans.CloneAndTrackTo(e.After, SpanTrackingMode.EdgeInclusive);
+            NormalizedSnapshotSpanCollection newDirtySpans = dirtySpans.CloneAndTrackTo(e.After, SpanTrackingMode.EdgeInclusive);
 
             // Dirty all the spans that changed.
             foreach (var change in e.Changes)
@@ -93,7 +94,7 @@ namespace SonarLintTracker
                 newDirtySpans = NormalizedSnapshotSpanCollection.Union(newDirtySpans, new NormalizedSnapshotSpanCollection(e.After, change.NewSpan));
             }
 
-            _dirtySpans = newDirtySpans;
+            dirtySpans = newDirtySpans;
         }
 
         // Translate spans to the updated snapshot of the same ITextBuffer
@@ -105,7 +106,7 @@ namespace SonarLintTracker
             // Copy all of the old errors to the new errors unless the error was affected by the text change
             foreach (var error in oldErrors.IssueMarkers)
             {
-                var newError = IssueMarker.CloneAndTranslateTo(error, _currentSnapshot);
+                var newError = IssueMarker.CloneAndTranslateTo(error, currentSnapshot);
                 if (newError != null)
                 {
                     Debug.Assert(newError.Span.Length == error.Span.Length);
@@ -123,7 +124,7 @@ namespace SonarLintTracker
             var oldSnapshot = this.Factory.CurrentSnapshot;
             var newSnapshot = new ErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
 
-            newSnapshot.IssueMarkers.Add(new IssueMarker(new SnapshotSpan(new SnapshotPoint(_currentSnapshot, 23), 5)));
+            newSnapshot.IssueMarkers.Add(new IssueMarker(new SnapshotSpan(new SnapshotPoint(currentSnapshot, 23), 5)));
 
             SnapToNewSnapshot(newSnapshot);
         }
@@ -135,11 +136,11 @@ namespace SonarLintTracker
 
             // Tell the provider to mark all the sinks dirty (so, as a side-effect, they will start an update pass that will get the new snapshot
             // from the factory).
-            _provider.UpdateAllSinks();
+            provider.UpdateAllSinks();
 
-            foreach (var tagger in _activeTaggers)
+            foreach (var tagger in taggers)
             {
-                tagger.UpdateErrors(_currentSnapshot, snapshot);
+                tagger.UpdateErrors(currentSnapshot, snapshot);
             }
 
             this.LastErrors = snapshot;

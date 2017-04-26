@@ -8,21 +8,21 @@ namespace SonarLintTracker
 {
     class Tagger : ITagger<IErrorTag>, IDisposable
     {
-        private readonly IssueTracker _tracker;
-        private ErrorsSnapshot _snapshot;
+        private readonly IssueTracker tracker;
+        private ErrorsSnapshot snapshot;
 
         internal Tagger(IssueTracker tracker)
         {
-            this._tracker = tracker;
-            this._snapshot = tracker.LastErrors;
+            this.tracker = tracker;
+            this.snapshot = tracker.LastErrors;
 
             tracker.AddTagger(this);
         }
 
         internal void UpdateErrors(ITextSnapshot currentSnapshot, ErrorsSnapshot snapshot)
         {
-            var oldSnapshot = _snapshot;
-            _snapshot = snapshot;
+            var oldSnapshot = this.snapshot;
+            this.snapshot = snapshot;
 
             var h = this.TagsChanged;
             if (h != null)
@@ -31,7 +31,7 @@ namespace SonarLintTracker
                 int start = int.MaxValue;
                 int end = int.MinValue;
 
-                if ((oldSnapshot != null) && (oldSnapshot.IssueMarkers.Count > 0))
+                if (oldSnapshot != null && oldSnapshot.IssueMarkers.Count > 0)
                 {
                     start = oldSnapshot.IssueMarkers[0].Span.Start.TranslateTo(currentSnapshot, PointTrackingMode.Negative);
                     end = oldSnapshot.IssueMarkers[oldSnapshot.IssueMarkers.Count - 1].Span.End.TranslateTo(currentSnapshot, PointTrackingMode.Positive);
@@ -53,16 +53,16 @@ namespace SonarLintTracker
         public void Dispose()
         {
             // Called when the tagger is no longer needed (generally when the ITextView is closed).
-            _tracker.RemoveTagger(this);
+            tracker.RemoveTagger(this);
         }
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
         public IEnumerable<ITagSpan<IErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
-            if (_snapshot != null)
+            if (snapshot != null)
             {
-                foreach (var issue in _snapshot.IssueMarkers)
+                foreach (var issue in snapshot.IssueMarkers)
                 {
                     if (spans.IntersectsWith(issue.Span))
                     {

@@ -13,6 +13,7 @@ The main classes and their purposes:
 
 - `IssueTracker`: track errors for a specific buffer. Translate error locations
   when they are moved by changes in the buffer.
+  Only the first tagger is used for tracking, subsequent are added to list but not used.
 
 - `SinkManager`: maybe: link `ITableDataSink` with `TaggerProvider`,
   to synchronize the content of the Error List with the tags in the editor.

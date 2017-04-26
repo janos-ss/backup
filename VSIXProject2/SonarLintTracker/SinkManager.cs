@@ -9,35 +9,35 @@ namespace SonarLintTracker
     /// </summary>
     class SinkManager : IDisposable
     {
-        private readonly TaggerProvider _errorsProvider;
-        private readonly ITableDataSink _sink;
+        private readonly TaggerProvider taggerProvider;
+        private readonly ITableDataSink sink;
 
-        internal SinkManager(TaggerProvider errorsProvider, ITableDataSink sink)
+        internal SinkManager(TaggerProvider taggerProvider, ITableDataSink sink)
         {
-            _errorsProvider = errorsProvider;
-            _sink = sink;
+            this.taggerProvider = taggerProvider;
+            this.sink = sink;
 
-            errorsProvider.AddSinkManager(this);
+            taggerProvider.AddSinkManager(this);
         }
 
         public void Dispose()
         {
-            _errorsProvider.RemoveSinkManager(this);
+            taggerProvider.RemoveSinkManager(this);
         }
 
         internal void AddIssueTracker(IssueTracker issueTracker)
         {
-            _sink.AddFactory(issueTracker.Factory);
+            sink.AddFactory(issueTracker.Factory);
         }
 
         internal void RemoveIssueTracker(IssueTracker issueTracker)
         {
-            _sink.RemoveFactory(issueTracker.Factory);
+            sink.RemoveFactory(issueTracker.Factory);
         }
 
         internal void UpdateSink()
         {
-            _sink.FactorySnapshotChanged(null);
+            sink.FactorySnapshotChanged(null);
         }
     }
 }

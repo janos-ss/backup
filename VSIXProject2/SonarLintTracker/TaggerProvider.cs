@@ -55,6 +55,9 @@ namespace SonarLintTracker
             // Multiple views could have that buffer open simultaneously, so only create one instance of the tracker.
             if ((buffer == textView.TextBuffer) && (typeof(T) == typeof(IErrorTag)))
             {
+                // TODO this singleton property looks like a dirty hack.
+                // The IssueTracker removes the property when the last tagger is removed,
+                // but that code is far away from here, making the code "magic", and error-prone to modifications
                 var tracker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
 
                 // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
@@ -135,7 +138,7 @@ namespace SonarLintTracker
 
         public void AddIssueTracker(IssueTracker tracker)
         {
-            // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
+            // This call will always happen on the UI thread (it is a side-effect of adding the 1st tagger).
             lock (managers)
             {
                 trackers.Add(tracker.FilePath, tracker);
@@ -149,7 +152,7 @@ namespace SonarLintTracker
 
         public void RemoveIssueTracker(IssueTracker tracker)
         {
-            // This call will always happen on the UI thread (it is a side-effect of adding or removing the 1st/last tagger).
+            // This call will always happen on the UI thread (it is a side-effect or removing the last tagger).
             lock (managers)
             {
                 trackers.Remove(tracker.FilePath);

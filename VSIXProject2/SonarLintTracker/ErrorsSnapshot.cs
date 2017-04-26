@@ -9,8 +9,8 @@ namespace SonarLintTracker
 {
     class ErrorsSnapshot : WpfTableEntriesSnapshotBase
     {
-        private readonly string _filePath;
-        private readonly int _versionNumber;
+        private readonly string filePath;
+        private readonly int versionNumber;
 
         // We're not using an immutable list here but we cannot modify the list in any way once we've published the snapshot.
         public readonly List<IssueMarker> IssueMarkers = new List<IssueMarker>();
@@ -19,8 +19,8 @@ namespace SonarLintTracker
 
         internal ErrorsSnapshot(string filePath, int versionNumber)
         {
-            _filePath = filePath;
-            _versionNumber = versionNumber;
+            this.filePath = filePath;
+            this.versionNumber = versionNumber;
         }
 
         public override int Count
@@ -35,7 +35,7 @@ namespace SonarLintTracker
         {
             get
             {
-                return _versionNumber;
+                return versionNumber;
             }
         }
 
@@ -58,7 +58,7 @@ namespace SonarLintTracker
 
                 currentSnapshot = currentSnapshot.NextSnapshot;
             }
-            while ((currentSnapshot != null) && (currentSnapshot != newerSnapshot) && (currentIndex >= 0));
+            while (currentSnapshot != null && currentSnapshot != newerSnapshot && currentIndex >= 0);
 
             return currentIndex;
         }
@@ -69,7 +69,7 @@ namespace SonarLintTracker
             {
                 if (columnName == StandardTableKeyNames.DocumentName)
                 {
-                    content = _filePath;
+                    content = filePath;
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.ErrorCategory)
