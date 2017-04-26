@@ -75,12 +75,17 @@ namespace VSIXProject2
         {
             base.Initialize();
 
+            // TODO can we move this to TaggerProvider directly?
             dte = (DTE)GetService(typeof(SDTE));
             documentEvents = dte.Events.DocumentEvents;
-            documentEvents.DocumentSaved += DocumentSaved;
+            documentEvents.DocumentSaved += RunAnalysis;
+
+            // TODO this doesn't work, because this gets triggered before the tagger is initialized
+            //      Perhaps the tagger/provider can do this when initialized.
+            //documentEvents.DocumentOpened += RunAnalysis;
         }
 
-        private void DocumentSaved(Document document)
+        private void RunAnalysis(Document document)
         {
             if (document == null || document.Language != "JavaScript")
             {
