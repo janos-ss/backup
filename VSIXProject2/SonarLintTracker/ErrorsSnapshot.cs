@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace SonarLintTracker
 {
-    class SonarLintErrorsSnapshot : WpfTableEntriesSnapshotBase
+    class ErrorsSnapshot : WpfTableEntriesSnapshotBase
     {
         private readonly string _filePath;
         private readonly int _versionNumber;
@@ -15,9 +15,9 @@ namespace SonarLintTracker
         // We're not using an immutable list here but we cannot modify the list in any way once we've published the snapshot.
         public readonly List<IssueSpan> Errors = new List<IssueSpan>();
 
-        public SonarLintErrorsSnapshot NextSnapshot;
+        public ErrorsSnapshot NextSnapshot;
 
-        internal SonarLintErrorsSnapshot(string filePath, int versionNumber)
+        internal ErrorsSnapshot(string filePath, int versionNumber)
         {
             _filePath = filePath;
             _versionNumber = versionNumber;

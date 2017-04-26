@@ -7,12 +7,12 @@ namespace SonarLintTracker
     /// Every consumer of data from an <see cref="ITableDataSource"/> provides an <see cref="ITableDataSink"/> to record the changes. We give the consumer
     /// an IDisposable (this object) that they hang on to as long as they are interested in our data (and they Dispose() of it when they are done).
     /// </summary>
-    class SonarLintSinkManager : IDisposable
+    class SinkManager : IDisposable
     {
         private readonly TaggerProvider _errorsProvider;
         private readonly ITableDataSink _sink;
 
-        internal SonarLintSinkManager(TaggerProvider errorsProvider, ITableDataSink sink)
+        internal SinkManager(TaggerProvider errorsProvider, ITableDataSink sink)
         {
             _errorsProvider = errorsProvider;
             _sink = sink;
@@ -25,14 +25,14 @@ namespace SonarLintTracker
             _errorsProvider.RemoveSinkManager(this);
         }
 
-        internal void AddSonarLintChecker(IssueTracker sonarLintChecker)
+        internal void AddIssueTracker(IssueTracker issueTracker)
         {
-            _sink.AddFactory(sonarLintChecker.Factory);
+            _sink.AddFactory(issueTracker.Factory);
         }
 
-        internal void RemoveSonarLintChecker(IssueTracker sonarLintChecker)
+        internal void RemoveIssueTracker(IssueTracker issueTracker)
         {
-            _sink.RemoveFactory(sonarLintChecker.Factory);
+            _sink.RemoveFactory(issueTracker.Factory);
         }
 
         internal void UpdateSink()

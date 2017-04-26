@@ -57,8 +57,8 @@
     <Compile Include="SonarLintTracker\TaggerProvider.cs" />
     <Compile Include="SonarLintTracker\IssueTracker.cs" />
     <Compile Include="SonarLintTracker\Tagger.cs" />
-    <Compile Include="SonarLintTracker\SonarLintErrorsFactory.cs" />
-    <Compile Include="SonarLintTracker\SonarLintErrorsSnapshot.cs" />
+    <Compile Include="SonarLintTracker\SnapshotFactory.cs" />
+    <Compile Include="SonarLintTracker\ErrorsSnapshot.cs" />
     <Compile Include="SonarLintTracker\IssueSpan.cs" />
     <Compile Include="SpellCheckerExample\SinkManager.cs" />
     <Compile Include="SpellCheckerExample\SpellChecker.cs" />
@@ -72,6 +72,7 @@
   <ItemGroup>
     <None Include="Key.snk" />
     <None Include="packages.config" />
+    <None Include="SonarLintTracker\README.md" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

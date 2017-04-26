@@ -22,7 +22,7 @@ namespace SonarLintTracker
         private readonly List<Tagger> _activeTaggers = new List<Tagger>();
 
         internal readonly string FilePath;
-        internal readonly SonarLintErrorsFactory Factory;
+        internal readonly SnapshotFactory Factory;
 
         internal IssueTracker(TaggerProvider provider, ITextView textView, ITextBuffer buffer)
         {
@@ -36,9 +36,11 @@ namespace SonarLintTracker
                 this.FilePath = document.FilePath;
 
                 // TODO what happens if the file gets renamed?
+
+                // TODO what happens if could not get file?
             }
 
-            this.Factory = new SonarLintErrorsFactory(this, new SonarLintErrorsSnapshot(this.FilePath, 0));
+            this.Factory = new SnapshotFactory(new ErrorsSnapshot(this.FilePath, 0));
         }
 
         internal void AddTagger(Tagger tagger)
@@ -95,10 +97,10 @@ namespace SonarLintTracker
         }
 
         // Translate spans to the updated snapshot of the same ITextBuffer
-        private SonarLintErrorsSnapshot TranslateErrorSpans()
+        private ErrorsSnapshot TranslateErrorSpans()
         {
             var oldErrors = this.Factory.CurrentSnapshot;
-            var newErrors = new SonarLintErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
+            var newErrors = new ErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
 
             // Copy all of the old errors to the new errors unless the error was affected by the text change
             foreach (var error in oldErrors.Errors)
@@ -119,14 +121,14 @@ namespace SonarLintTracker
         internal void UpdateErrors(List<object> issues)
         {
             var oldSnapshot = this.Factory.CurrentSnapshot;
-            var newSnapshot = new SonarLintErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
+            var newSnapshot = new ErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
 
             newSnapshot.Errors.Add(new IssueSpan(new SnapshotSpan(new SnapshotPoint(_currentSnapshot, 23), 5)));
 
             SnapToNewSnapshot(newSnapshot);
         }
 
-        private void SnapToNewSnapshot(SonarLintErrorsSnapshot snapshot)
+        private void SnapToNewSnapshot(ErrorsSnapshot snapshot)
         {
             // Tell our factory to snap to a new snapshot.
             this.Factory.UpdateErrors(snapshot);
@@ -143,6 +145,6 @@ namespace SonarLintTracker
             this.LastErrors = snapshot;
         }
 
-        internal SonarLintErrorsSnapshot LastErrors { get; private set; }
+        internal ErrorsSnapshot LastErrors { get; private set; }
     }
 }

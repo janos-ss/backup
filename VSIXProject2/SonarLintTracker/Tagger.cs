@@ -9,7 +9,7 @@ namespace SonarLintTracker
     class Tagger : ITagger<IErrorTag>, IDisposable
     {
         private readonly IssueTracker _checker;
-        private SonarLintErrorsSnapshot _snapshot;
+        private ErrorsSnapshot _snapshot;
 
         internal Tagger(IssueTracker checker)
         {
@@ -19,7 +19,7 @@ namespace SonarLintTracker
             checker.AddTagger(this);
         }
 
-        internal void UpdateErrors(ITextSnapshot currentSnapshot, SonarLintErrorsSnapshot snapshot)
+        internal void UpdateErrors(ITextSnapshot currentSnapshot, ErrorsSnapshot snapshot)
         {
             var oldSpellingErrors = _snapshot;
             _snapshot = snapshot;

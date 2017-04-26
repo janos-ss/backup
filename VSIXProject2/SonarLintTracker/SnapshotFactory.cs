@@ -2,20 +2,16 @@
 
 namespace SonarLintTracker
 {
-    class SonarLintErrorsFactory : TableEntriesSnapshotFactoryBase
+    class SnapshotFactory : TableEntriesSnapshotFactoryBase
     {
-        private readonly IssueTracker _sonarLintChecker;
+        public ErrorsSnapshot CurrentSnapshot { get; private set; }
 
-        public SonarLintErrorsSnapshot CurrentSnapshot { get; private set; }
-
-        public SonarLintErrorsFactory(IssueTracker sonarLintChecker, SonarLintErrorsSnapshot snapshot)
+        public SnapshotFactory(ErrorsSnapshot snapshot)
         {
-            _sonarLintChecker = sonarLintChecker;
-
             this.CurrentSnapshot = snapshot;
         }
 
-        internal void UpdateErrors(SonarLintErrorsSnapshot snapshot)
+        internal void UpdateErrors(ErrorsSnapshot snapshot)
         {
             this.CurrentSnapshot.NextSnapshot = snapshot;
             this.CurrentSnapshot = snapshot;

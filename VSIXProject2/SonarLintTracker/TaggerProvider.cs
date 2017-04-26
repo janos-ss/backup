@@ -27,7 +27,7 @@ namespace SonarLintTracker
 
         const string _sonarLintDataSource = "SonarLint";
 
-        private readonly List<SonarLintSinkManager> _managers = new List<SonarLintSinkManager>();
+        private readonly List<SinkManager> _managers = new List<SinkManager>();
         private readonly Dictionary<string, IssueTracker> _sonarLintCheckers = new Dictionary<string, IssueTracker>();
 
         internal static TaggerProvider Instance { get; private set; }
@@ -106,11 +106,11 @@ namespace SonarLintTracker
         {
             // This method is called to each consumer interested in errors. In general, there will be only a single consumer (the error list tool window)
             // but it is always possible for 3rd parties to write code that will want to subscribe.
-            return new SonarLintSinkManager(this, sink);
+            return new SinkManager(this, sink);
         }
         #endregion
 
-        public void AddSinkManager(SonarLintSinkManager manager)
+        public void AddSinkManager(SinkManager manager)
         {
             // This call can, in theory, happen from any thread so be appropriately thread safe.
             // In practice, it will probably be called only once from the UI thread (by the error list tool window).
@@ -121,12 +121,12 @@ namespace SonarLintTracker
                 // Add the pre-existing spell checkers to the manager.
                 foreach (var checker in _sonarLintCheckers.Values)
                 {
-                    manager.AddSonarLintChecker(checker);
+                    manager.AddIssueTracker(checker);
                 }
             }
         }
 
-        public void RemoveSinkManager(SonarLintSinkManager manager)
+        public void RemoveSinkManager(SinkManager manager)
         {
             // This call can, in theory, happen from any thread so be appropriately thread safe.
             // In practice, it will probably be called only once from the UI thread (by the error list tool window).
@@ -146,7 +146,7 @@ namespace SonarLintTracker
                 // Tell the preexisting managers about the new spell checker
                 foreach (var manager in _managers)
                 {
-                    manager.AddSonarLintChecker(checker);
+                    manager.AddIssueTracker(checker);
                 }
             }
         }
@@ -160,7 +160,7 @@ namespace SonarLintTracker
 
                 foreach (var manager in _managers)
                 {
-                    manager.RemoveSonarLintChecker(checker);
+                    manager.RemoveIssueTracker(checker);
                 }
             }
         }
