@@ -103,15 +103,15 @@ namespace SonarLintTracker
             var newErrors = new ErrorsSnapshot(this.FilePath, oldErrors.VersionNumber + 1);
 
             // Copy all of the old errors to the new errors unless the error was affected by the text change
-            foreach (var error in oldErrors.Errors)
+            foreach (var error in oldErrors.IssueMarkers)
             {
-                var newError = IssueSpan.CloneAndTranslateTo(error, _currentSnapshot);
+                var newError = IssueMarker.CloneAndTranslateTo(error, _currentSnapshot);
                 if (newError != null)
                 {
                     Debug.Assert(newError.Span.Length == error.Span.Length);
 
-                    error.NextIndex = newErrors.Errors.Count;
-                    newErrors.Errors.Add(newError);
+                    error.NextIndex = newErrors.IssueMarkers.Count;
+                    newErrors.IssueMarkers.Add(newError);
                 }
             }
 
@@ -123,7 +123,7 @@ namespace SonarLintTracker
             var oldSnapshot = this.Factory.CurrentSnapshot;
             var newSnapshot = new ErrorsSnapshot(this.FilePath, oldSnapshot.VersionNumber + 1);
 
-            newSnapshot.Errors.Add(new IssueSpan(new SnapshotSpan(new SnapshotPoint(_currentSnapshot, 23), 5)));
+            newSnapshot.IssueMarkers.Add(new IssueMarker(new SnapshotSpan(new SnapshotPoint(_currentSnapshot, 23), 5)));
 
             SnapToNewSnapshot(newSnapshot);
         }

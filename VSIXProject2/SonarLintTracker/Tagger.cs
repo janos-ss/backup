@@ -31,16 +31,16 @@ namespace SonarLintTracker
                 int start = int.MaxValue;
                 int end = int.MinValue;
 
-                if ((oldSpellingErrors != null) && (oldSpellingErrors.Errors.Count > 0))
+                if ((oldSpellingErrors != null) && (oldSpellingErrors.IssueMarkers.Count > 0))
                 {
-                    start = oldSpellingErrors.Errors[0].Span.Start.TranslateTo(currentSnapshot, PointTrackingMode.Negative);
-                    end = oldSpellingErrors.Errors[oldSpellingErrors.Errors.Count - 1].Span.End.TranslateTo(currentSnapshot, PointTrackingMode.Positive);
+                    start = oldSpellingErrors.IssueMarkers[0].Span.Start.TranslateTo(currentSnapshot, PointTrackingMode.Negative);
+                    end = oldSpellingErrors.IssueMarkers[oldSpellingErrors.IssueMarkers.Count - 1].Span.End.TranslateTo(currentSnapshot, PointTrackingMode.Positive);
                 }
 
                 if (snapshot.Count > 0)
                 {
-                    start = Math.Min(start, snapshot.Errors[0].Span.Start.Position);
-                    end = Math.Max(end, snapshot.Errors[snapshot.Errors.Count - 1].Span.End.Position);
+                    start = Math.Min(start, snapshot.IssueMarkers[0].Span.Start.Position);
+                    end = Math.Max(end, snapshot.IssueMarkers[snapshot.IssueMarkers.Count - 1].Span.End.Position);
                 }
 
                 if (start < end)
@@ -62,7 +62,7 @@ namespace SonarLintTracker
         {
             if (_snapshot != null)
             {
-                foreach (var error in _snapshot.Errors)
+                foreach (var error in _snapshot.IssueMarkers)
                 {
                     if (spans.IntersectsWith(error.Span))
                     {

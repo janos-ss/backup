@@ -59,7 +59,7 @@
     <Compile Include="SonarLintTracker\Tagger.cs" />
     <Compile Include="SonarLintTracker\SnapshotFactory.cs" />
     <Compile Include="SonarLintTracker\ErrorsSnapshot.cs" />
-    <Compile Include="SonarLintTracker\IssueSpan.cs" />
+    <Compile Include="SonarLintTracker\IssueMarker.cs" />
     <Compile Include="SpellCheckerExample\SinkManager.cs" />
     <Compile Include="SpellCheckerExample\SpellChecker.cs" />
     <Compile Include="SpellCheckerExample\SpellCheckerProvider.cs" />

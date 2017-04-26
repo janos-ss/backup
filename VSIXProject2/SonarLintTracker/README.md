@@ -8,7 +8,7 @@ Important terms in Visual Studio development:
 
 The main classes and their purposes:
 
-- `IssueSpan`: track error spans (`SnapshotSpan`) in a text buffer (`ITextSnapshot`),
+- `IssueMarker`: track issue with error span (`SnapshotSpan`) in a text buffer (`ITextSnapshot`),
   with a helper method to relocate (translate) itself when the span is moved.
 
 - `IssueTracker`: track errors for a specific buffer. Translate error locations
@@ -19,7 +19,7 @@ The main classes and their purposes:
 
 - `SnapshotFactory`: ?
 
-- `ErrorsSnapshot`:
+- `ErrorsSnapshot`: Provide the content in the error list, based on the current snapshot of issue list.
 
 - `Tagger`:
 

@@ -13,7 +13,7 @@ namespace SonarLintTracker
         private readonly int _versionNumber;
 
         // We're not using an immutable list here but we cannot modify the list in any way once we've published the snapshot.
-        public readonly List<IssueSpan> Errors = new List<IssueSpan>();
+        public readonly List<IssueMarker> IssueMarkers = new List<IssueMarker>();
 
         public ErrorsSnapshot NextSnapshot;
 
@@ -27,7 +27,7 @@ namespace SonarLintTracker
         {
             get
             {
-                return this.Errors.Count;
+                return this.IssueMarkers.Count;
             }
         }
 
@@ -54,7 +54,7 @@ namespace SonarLintTracker
                 Debug.Assert(currentIndex >= 0);
                 Debug.Assert(currentIndex < currentSnapshot.Count);
 
-                currentIndex = currentSnapshot.Errors[currentIndex].NextIndex;
+                currentIndex = currentSnapshot.IssueMarkers[currentIndex].NextIndex;
 
                 currentSnapshot = currentSnapshot.NextSnapshot;
             }
@@ -65,97 +65,90 @@ namespace SonarLintTracker
 
         public override bool TryGetValue(int index, string columnName, out object content)
         {
-            if ((index >= 0) && (index < this.Errors.Count))
+            if ((index >= 0) && (index < this.IssueMarkers.Count))
             {
                 if (columnName == StandardTableKeyNames.DocumentName)
                 {
-                    // We return the full file path here. The UI handles displaying only the Path.GetFileName().
                     content = _filePath;
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.ErrorCategory)
                 {
-                    content = "Documentation";
+                    // TODO issue category, such as Sonar Bug, Sonar Code Smell
+                    content = "Sonar ???";
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.ErrorSource)
                 {
-                    content = "SonarLint";  // TODO reuse constant
+                    // TODO ok that it's not IntelliSense like for SonarC# ?
+                    content = "SonarLint";
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.Line)
                 {
-                    // Line and column numbers are 0-based (the UI that displays the line/column number will add one to the value returned here).
-                    content = this.Errors[index].Span.Start.GetContainingLine().LineNumber;
-
+                    content = this.IssueMarkers[index].Span.Start.GetContainingLine().LineNumber;
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.Column)
                 {
-                    var position = this.Errors[index].Span.Start;
+                    var position = this.IssueMarkers[index].Span.Start;
                     var line = position.GetContainingLine();
                     content = position.Position - line.Start.Position;
-
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.Text)
                 {
-                    content = string.Format(CultureInfo.InvariantCulture, "SonarLint: {0}", this.Errors[index].Span.GetText());
-
+                    // TODO issue name
+                    content = string.Format(CultureInfo.InvariantCulture, "SonarLint: {0}", this.IssueMarkers[index].Span.GetText());
                     return true;
                 }
-                //else if (columnName == StandardTableKeyNames2.TextInlines)
-                //{
-                //    var inlines = new List<Inline>();
-
-                //    inlines.Add(new Run("Spelling: "));
-                //    inlines.Add(new Run(this.Errors[index].Span.GetText())
-                //    {
-                //        FontWeight = FontWeights.ExtraBold
-                //    });
-
-                //    content = inlines;
-
-                //    return true;
-                //}
                 else if (columnName == StandardTableKeyNames.ErrorSeverity)
                 {
-                    content = __VSERRORCATEGORY.EC_MESSAGE;
-
-                    return true;
-                }
-                else if (columnName == StandardTableKeyNames.ErrorSource)
-                {
-                    content = ErrorSource.Other;
-
+                    content = __VSERRORCATEGORY.EC_WARNING;
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.BuildTool)
                 {
-                    content = "SonarLint";  // TODO reuse constant
-
+                    // TODO for example SonarAnalyzer.CSharp [SonarLint for Visual Studio 2015]
+                    content = "SonarAnalyzer.?";
                     return true;
                 }
                 else if (columnName == StandardTableKeyNames.ErrorCode)
                 {
-                    content = this.Errors[index].Span.GetText();
-
+                    // TODO
+                    content = "S????";
                     return true;
                 }
                 else if ((columnName == StandardTableKeyNames.ErrorCodeToolTip) || (columnName == StandardTableKeyNames.HelpLink))
                 {
                     // TODO see how SL for C# does this
-                    content = string.Format(CultureInfo.InvariantCulture, "http://www.bing.com/search?q={0}", this.Errors[index].Span.GetText());
-
+                    content = string.Format(CultureInfo.InvariantCulture, "http://www.sonarlint.org/visualstudio/rules/index.html#version=5.9.0.992&ruleId={0}", this.IssueMarkers[index].Span.GetText());
                     return true;
                 }
-
-                // We should also be providing values for StandardTableKeyNames.Project & StandardTableKeyNames.ProjectName but that is
-                // beyond the scope of this sample.
+                else if (columnName == StandardTableKeyNames.ProjectGuid)
+                {
+                    // TODO
+                }
+                else if (columnName == StandardTableKeyNames.ProjectName)
+                {
+                    // TODO
+                }
             }
 
             content = null;
             return false;
+        }
+
+        public override bool CanCreateDetailsContent(int index)
+        {
+            return true;
+        }
+
+        public override bool TryCreateDetailsStringContent(int index, out string content)
+        {
+            // TODO
+            content = "Using the readonly keyword on a field means that ...";
+            return (content != null);
         }
     }
 }
