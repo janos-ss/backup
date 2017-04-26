@@ -31,13 +31,13 @@ namespace SonarLintTracker
             this.currentSnapshot = buffer.CurrentSnapshot;
 
             ITextDocument document;
+            // TODO what happens if could not get file?
             if (provider.TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out document))
             {
                 this.FilePath = document.FilePath;
 
                 // TODO what happens if the file gets renamed?
-
-                // TODO what happens if could not get file?
+                // TODO perhaps we can listen for the file changing its name (ITextDocument.FileActionOccurred)
             }
 
             this.Factory = new SnapshotFactory(new IssuesSnapshot(this.FilePath, 0));
