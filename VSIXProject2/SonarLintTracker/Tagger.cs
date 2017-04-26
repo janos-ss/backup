@@ -19,6 +19,11 @@ namespace SonarLintTracker
             tracker.AddTagger(this);
         }
 
+        public void Dispose()
+        {
+            tracker.RemoveTagger(this);
+        }
+
         internal void UpdateErrors(ITextSnapshot currentSnapshot, ErrorsSnapshot snapshot)
         {
             var oldSnapshot = this.snapshot;
@@ -48,12 +53,6 @@ namespace SonarLintTracker
                     h(this, new SnapshotSpanEventArgs(new SnapshotSpan(currentSnapshot, Span.FromBounds(start, end))));
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            // Called when the tagger is no longer needed (generally when the ITextView is closed).
-            tracker.RemoveTagger(this);
         }
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
