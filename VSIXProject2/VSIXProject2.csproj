@@ -56,7 +56,6 @@
     <Compile Include="SonarLintTracker\SinkManager.cs" />
     <Compile Include="SonarLintTracker\TaggerProvider.cs" />
     <Compile Include="SonarLintTracker\IssueTracker.cs" />
-    <Compile Include="SonarLintTracker\Tagger.cs" />
     <Compile Include="SonarLintTracker\SnapshotFactory.cs" />
     <Compile Include="SonarLintTracker\IssuesSnapshot.cs" />
     <Compile Include="SonarLintTracker\IssueMarker.cs" />
