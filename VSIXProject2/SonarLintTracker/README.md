@@ -25,7 +25,7 @@ In a nutshell:
 - `TaggerProvider` creates taggers for each buffer when requested.
   It creates one `IssueTracker` per file, to track location changes.
 
-- `IssueTracker` and `SinkManager` react on issue changes triggered by SonarLint analysis
+- `Tagger` and `SinkManager` react on issue changes triggered by SonarLint analysis
   or editor changes.
 
 The main classes and their purposes:
@@ -35,7 +35,7 @@ The main classes and their purposes:
 
 - `IssueTracker`: track issues for a specific buffer. Translate issuer locations
   when they are moved by editor changes in the buffer.
-  Create tags from issues in the current snapshot, refreshing only part of the buffer, between first issue and last.
+  Only the first tagger is used for tracking, subsequent are added to a list but not used.
 
 - `SinkManager`: maybe: link `ITableDataSink` with `TaggerProvider`,
   to synchronize the content of the Error List with the tags in the editor.
@@ -43,5 +43,8 @@ The main classes and their purposes:
 - `IssuesSnapshot`: provide the content details in the Error List, based on the current snapshot of issues list.
 
 - `SnapshotFactory`: track current issues snapshot, and manage switching to next snapshot.
+
+- `Tagger`: create tags from issues in the current snapshot,
+  refreshing only part of the buffer, between first issue and last.
 
 - `TaggerProvider`: data source for the Error List. Also provide tagger for issues.
