@@ -24,22 +24,13 @@ namespace SonarLintTracker
         internal readonly string FilePath;
         internal readonly SnapshotFactory Factory;
 
-        internal IssueTracker(TaggerProvider provider, ITextView textView, ITextBuffer buffer)
+        internal IssueTracker(TaggerProvider provider, ITextBuffer buffer, string filePath)
         {
             this.provider = provider;
             this.textBuffer = buffer;
             this.currentSnapshot = buffer.CurrentSnapshot;
 
-            ITextDocument document;
-            // TODO what happens if could not get file?
-            if (provider.TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out document))
-            {
-                this.FilePath = document.FilePath;
-
-                // TODO what happens if the file gets renamed?
-                // TODO perhaps we can listen for the file changing its name (ITextDocument.FileActionOccurred)
-            }
-
+            this.FilePath = filePath;
             this.Factory = new SnapshotFactory(new IssuesSnapshot(this.FilePath, 0));
         }
 
@@ -66,9 +57,6 @@ namespace SonarLintTracker
                 textBuffer.ChangedLowPriority -= this.OnBufferChange;
 
                 provider.RemoveIssueTracker(this);
-
-                // TODO dirty hack? the property was added by TaggerProvider.CreateTagger. There should be a better way.
-                textBuffer.Properties.RemoveProperty(typeof(IssueTracker));
             }
         }
 

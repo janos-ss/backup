@@ -55,14 +55,27 @@ namespace SonarLintTracker
             // Multiple views could have that buffer open simultaneously, so only create one instance of the tracker.
             if ((buffer == textView.TextBuffer) && (typeof(T) == typeof(IErrorTag)))
             {
-                // TODO this singleton property looks like a dirty hack.
-                // The IssueTracker removes the property when the last tagger is removed,
-                // but that code is far away from here, making the code "magic", and prone to errors if modified.
-                var tracker = buffer.Properties.GetOrCreateSingletonProperty(typeof(IssueTracker), () => new IssueTracker(this, textView, buffer));
+                ITextDocument document;
+                if (TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out document))
+                {
+                    var filePath = document.FilePath;
 
-                // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
-                // (unless it was the last tagger on the IssueTracker).
-                return new Tagger(tracker) as ITagger<T>;
+                    // TODO what happens if the file gets renamed?
+                    // TODO perhaps we can listen for the file changing its name (ITextDocument.FileActionOccurred)
+
+                    lock (trackers)
+                    {
+                        if (!trackers.ContainsKey(filePath))
+                        {
+                            var tracker = new IssueTracker(this, buffer, filePath);
+
+                            // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
+                            // (unless it was the last tagger on the IssueTracker).
+                            return new Tagger(tracker) as ITagger<T>;
+                        }
+                    }
+                }
+
             }
 
             return null;
