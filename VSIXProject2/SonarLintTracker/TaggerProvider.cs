@@ -69,9 +69,9 @@ namespace SonarLintTracker
                         {
                             var tracker = new IssueTracker(this, buffer, filePath);
 
-                            // This is a thin wrapper around the IssueTracker that can be disposed of without shutting down the IssueTracker
-                            // (unless it was the last tagger on the IssueTracker).
-                            return new Tagger(tracker) as ITagger<T>;
+                            trackers.Add(filePath, tracker);
+
+                            return tracker as ITagger<T>;
                         }
                     }
                 }
