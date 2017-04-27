@@ -6,9 +6,6 @@ namespace SonarLintTracker
     {
         public readonly SnapshotSpan Span;
 
-        // This is used by IssuesSnapshot.IndexOf() to map this error to the corresponding error in the next snapshot.
-        public int NextIndex = -1;
-
         public IssueMarker(SnapshotSpan span)
         {
             this.Span = span;

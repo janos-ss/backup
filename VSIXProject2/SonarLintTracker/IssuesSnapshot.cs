@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.Shell.TableControl;
 using Microsoft.VisualStudio.Shell.TableManager;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace SonarLintTracker
@@ -37,29 +36,6 @@ namespace SonarLintTracker
             {
                 return versionNumber;
             }
-        }
-
-        public override int IndexOf(int currentIndex, ITableEntriesSnapshot newerSnapshot)
-        {
-            // This and TranslateTo() are used to map errors from one snapshot to a different one
-            // (that way the error list can do things like maintain the selection on an error
-            // even when the snapshot containing the error is replaced by a new one).
-
-            // Map currentIndex to the corresponding index in newerSnapshot (and keep doing it until either
-            // we run out of snapshots, we reach newerSnapshot, or the index can no longer be mapped forward).
-            var currentSnapshot = this;            
-            do
-            {
-                Debug.Assert(currentIndex >= 0);
-                Debug.Assert(currentIndex < currentSnapshot.Count);
-
-                currentIndex = currentSnapshot.IssueMarkers[currentIndex].NextIndex;
-
-                currentSnapshot = currentSnapshot.NextSnapshot;
-            }
-            while (currentSnapshot != null && currentSnapshot != newerSnapshot && currentIndex >= 0);
-
-            return currentIndex;
         }
 
         public override bool TryGetValue(int index, string columnName, out object content)

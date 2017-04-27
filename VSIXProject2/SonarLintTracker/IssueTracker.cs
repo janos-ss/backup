@@ -110,8 +110,6 @@ namespace SonarLintTracker
                 if (newMarker != null)
                 {
                     Debug.Assert(newMarker.Span.Length == marker.Span.Length);
-
-                    marker.NextIndex = newMarkers.IssueMarkers.Count;
                     newMarkers.IssueMarkers.Add(newMarker);
                 }
             }
